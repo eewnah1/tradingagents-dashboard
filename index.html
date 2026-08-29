@@ -38,6 +38,10 @@
         <div class="metric" id="speedup">—</div>
         <div class="label">GPU speed-up</div>
       </div>
+      <div class="card">
+        <div class="metric" style="font-size: 1.1rem; color: #2563eb;">Created</div>
+        <div class="label">Transwarp Catalog + Schema</div>
+      </div>
     </div>
 
     <div class="chart-wrap">
@@ -65,13 +69,25 @@
           <td>Transwarp Cloud</td>
           <td>GPU</td>
           <td>—</td>
-          <td>Blocked: no GPU General Compute selectable</td>
+          <td>Blocked: no GPU-backed Python compute available</td>
+        </tr>
+        <tr>
+          <td>Transwarp Catalog</td>
+          <td>—</td>
+          <td>—</td>
+          <td>Catalog <code>tradingagents_benchmark</code> and schema <code>benchmark_results</code> created</td>
+        </tr>
+        <tr>
+          <td>Transwarp Marketplace</td>
+          <td>—</td>
+          <td>—</td>
+          <td>Read-only listing; no user-facing publish UI found</td>
         </tr>
       </tbody>
     </table>
 
     <div class="note" style="margin-top: 1.5rem;">
-      <strong>Note:</strong> Transwarp CPU baseline could not complete because the only available Python compute (<code>Cognitive_General_Starter</code>) failed to resume with <code>workload 8602... has automatic resume disabled</code>. No GPU General Compute is exposed in the notebook compute selector, so the GPU run is also blocked. The local CPU timing above is provided as a baseline while the compute issues are resolved.
+      <strong>Note:</strong> The local CPU baseline ran in 0.03 s. The Transwarp CPU run is blocked because the only available Python General Compute (<code>Cognitive_General_Starter</code>, owned by <code>xiaolin.guo@transwarp.io</code>) cannot be resumed: <code>workload 8602... has automatic resume disabled</code>, and direct API start/resume returns <code>403 Access denied</code>. No GPU-backed General Compute is exposed for Python notebooks in this workspace, so the GPU run cannot be performed. The Catalog and Schema were created via the Sophon-Mind API as a trail in Catalog metadata. The Marketplace appears curated and read-only, so a user listing could not be published.
     </div>
   </div>
 
