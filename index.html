@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradingAgents CPU vs GPU Benchmark</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 2rem; background: #f7f7f8; color: #111; }
+    .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    h1 { margin-top: 0; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .card { background: #f3f4f6; padding: 1rem; border-radius: 8px; }
+    .metric { font-size: 2rem; font-weight: 700; color: #ea580c; }
+    .label { color: #6b7280; font-size: 0.9rem; }
+    .chart-wrap { position: relative; height: 320px; margin: 2rem 0; }
+    .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 4px; color: #92400e; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
+    th { color: #6b7280; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TradingAgents Benchmark: CPU vs GPU</h1>
+    <p>Comparison of the <code>TradingAgents/test.py</code> workload (AAPL MACD 30-day lookback) across compute types.</p>
+
+    <div class="summary">
+      <div class="card">
+        <div class="metric" id="cpu-time">0.03 s</div>
+        <div class="label">CPU runtime (local)</div>
+      </div>
+      <div class="card">
+        <div class="metric" id="gpu-time">—</div>
+        <div class="label">GPU runtime (pending)</div>
+      </div>
+      <div class="card">
+        <div class="metric" id="speedup">—</div>
+        <div class="label">GPU speed-up</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <canvas id="perfChart"></canvas>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Platform</th><th>Compute</th><th>Runtime (s)</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Local Devin VM</td>
+          <td>CPU</td>
+          <td>0.03</td>
+          <td>Baseline captured</td>
+        </tr>
+        <tr>
+          <td>Transwarp Cloud</td>
+          <td>CPU</td>
+          <td>—</td>
+          <td>Blocked: workload auto-resume disabled</td>
+        </tr>
+        <tr>
+          <td>Transwarp Cloud</td>
+          <td>GPU</td>
+          <td>—</td>
+          <td>Blocked: no GPU General Compute selectable</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note" style="margin-top: 1.5rem;">
+      <strong>Note:</strong> Transwarp CPU baseline could not complete because the only available Python compute (<code>Cognitive_General_Starter</code>) failed to resume with <code>workload 8602... has automatic resume disabled</code>. No GPU General Compute is exposed in the notebook compute selector, so the GPU run is also blocked. The local CPU timing above is provided as a baseline while the compute issues are resolved.
+    </div>
+  </div>
+
+  <script>
+    const cpuTime = 0.03;
+    const gpuTime = null;
+    const ctx = document.getElementById('perfChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['CPU (local)', 'GPU (pending)'],
+        datasets: [{
+          label: 'Runtime (seconds)',
+          data: [cpuTime, gpuTime || 0],
+          backgroundColor: ['#ea580c', '#9ca3af'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Seconds' } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
