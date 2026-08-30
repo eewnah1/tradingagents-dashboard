@@ -3,181 +3,450 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TradingAgents Project: CPU vs GPU Benchmark</title>
+  <title>GPU HFT CPU vs GPU Benchmark</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 2rem; background: #f7f7f8; color: #111; }
-    .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-    h1 { margin-top: 0; }
-    h2 { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; margin-top: 2rem; }
-    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    :root {
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #ea580c;
+      --accent2: #16a34a;
+      --info: #2563eb;
+      --warning: #f59e0b;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+    a { color: var(--info); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+    .hero { background: linear-gradient(135deg, #111827 0%, #1f2937 100%); color: #fff; padding: 3rem 2rem; border-radius: 16px; margin-bottom: 2rem; }
+    .hero h1 { margin: 0 0 0.5rem; font-size: 2rem; }
+    .hero p { margin: 0; color: #d1d5db; max-width: 700px; }
+    .hero .links { margin-top: 1rem; font-size: 0.9rem; }
+    .hero .links a { color: #93c5fd; margin-right: 1rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; vertical-align: middle; margin-left: 0.5rem; }
+
+    h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; }
+    .section { background: var(--card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin: 1rem 0; }
     .card { background: #f3f4f6; padding: 1rem; border-radius: 8px; }
-    .metric { font-size: 1.8rem; font-weight: 700; color: #ea580c; }
-    .label { color: #6b7280; font-size: 0.9rem; }
-    .chart-wrap { position: relative; height: 320px; margin: 2rem 0; }
-    .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 4px; color: #92400e; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
-    th { color: #6b7280; font-weight: 500; }
-    .agent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
-    .agent-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
-    .agent-card h3 { margin-top: 0; font-size: 1.05rem; color: #111827; }
-    .agent-card p { margin-bottom: 0; color: #4b5563; font-size: 0.95rem; }
+    .metric { font-size: 1.7rem; font-weight: 700; color: var(--accent); }
+    .metric.green { color: var(--accent2); }
+    .metric.blue { color: var(--info); }
+    .label { color: var(--muted); font-size: 0.9rem; }
+
+    .chart-wrap { position: relative; height: 320px; margin: 1.5rem 0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; background: #f9fafb; }
+    tr:last-child td { border-bottom: none; }
+    code { background: #f3f4f6; padding: 0.15rem 0.35rem; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.85em; }
+    .note { background: #fffbeb; border-left: 4px solid var(--warning); padding: 1rem; border-radius: 4px; color: #92400e; margin-top: 1rem; }
+    .info { background: #eff6ff; border-left: 4px solid var(--info); padding: 1rem; border-radius: 4px; color: #1e40af; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .agent { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+    .agent h3 { margin-top: 0; }
+    ul { padding-left: 1.2rem; }
+    li { margin-bottom: 0.35rem; }
+    pre { background: #111827; color: #e5e7eb; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; }
+    .tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 0.1rem 0.45rem; border-radius: 4px; font-size: 0.8rem; margin: 0.15rem 0.15rem 0.15rem 0; }
+
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 2rem; padding: 1rem; }
+    @media (max-width: 600px) { .hero h1 { font-size: 1.5rem; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>TradingAgents Project on Transwarp Cloud</h1>
-    <p>Full overview of the TradingAgents multi-agent LLM trading framework, followed by the CPU vs GPU benchmark run on Transwarp Cloud.</p>
-
-    <h2>1. What is TradingAgents?</h2>
-    <p>TradingAgents is a multi-agent trading framework that mirrors a real-world trading firm. Specialized LLM-powered agents collaboratively evaluate market conditions, debate trade ideas, and reach a final trading decision through a LangGraph workflow.</p>
-
-    <div class="agent-grid">
-      <div class="agent-card">
-        <h3>Fundamentals Analyst</h3>
-        <p>Evaluates company financials, intrinsic value, and potential red flags from fundamentals data.</p>
-      </div>
-      <div class="agent-card">
-        <h3>Sentiment Analyst</h3>
-        <p>Aggregates news, StockTwits, and Reddit chatter into a single sentiment read for short-term mood.</p>
-      </div>
-      <div class="agent-card">
-        <h3>News Analyst</h3>
-        <p>Monitors global news and macroeconomic indicators and interprets their impact on markets.</p>
-      </div>
-      <div class="agent-card">
-        <h3>Technical Analyst</h3>
-        <p>Uses indicators such as MACD, RSI, Bollinger Bands, ATR, and VWMA to detect price patterns and momentum.</p>
-      </div>
-      <div class="agent-card">
-        <h3>Researcher Team</h3>
-        <p>Bullish and bearish researchers debate the analysts' insights and balance potential gains against risks.</p>
-      </div>
-      <div class="agent-card">
-        <h3>Trader Agent</h3>
-        <p>Composes the research reports into an informed trading decision, including timing and magnitude.</p>
-      </div>
-      <div class="agent-card">
-        <h3>Risk Management</h3>
-        <p>Assesses portfolio risk using volatility, liquidity, and other risk factors to adjust strategies.</p>
-      </div>
-      <div class="agent-card">
-        <h3>Portfolio Manager</h3>
-        <p>Approves or rejects the trade proposal. If approved, the order is sent to a simulated exchange.</p>
+    <div class="hero">
+      <h1>GPU-Accelerated Multi-Agent HFT: CPU vs GPU Benchmark <span class="badge">eewnah1</span></h1>
+      <p>A JAX-based, GPU-accelerated multi-agent reinforcement learning framework for high-frequency trading, benchmarked on Transwarp Cloud CPU and GPU Data Warehouse compute.</p>
+      <div class="links">
+        <a href="https://github.com/eewnah1/GPU-Accelerated-Multi-Agent-Reinforcement-Learning-for-High-Frequency-Trading">GitHub Repo</a>
+        <a href="https://tradingagents-benchmark-dashboard.onrender.com/">Live Dashboard</a>
       </div>
     </div>
 
-    <h2>2. Data & Compute Pipeline</h2>
-    <ul>
-      <li><strong>Data sources:</strong> Yahoo Finance (yfinance), Alpha Vantage, FRED, Polymarket, and other configured vendors.</li>
-      <li><strong>Indicators:</strong> Computed with <code>stockstats</code> (MACD, RSI, Bollinger, ATR, VWMA, MFI, SMA/EMA).</li>
-      <li><strong>Workflow engine:</strong> LangGraph with structured-output agents and optional checkpoint resume.</li>
-      <li><strong>Transwarp catalog:</strong> <code>tradingagents_benchmark</code> namespace, schema <code>main</code>.</li>
-      <li><strong>Tables:</strong>
+    <div class="section">
+      <h2>Executive Summary</h2>
+      <p>This dashboard benchmarks the <code>eewnah1/GPU-Accelerated-Multi-Agent-Reinforcement-Learning-for-High-Frequency-Trading</code> workload on Transwarp Cloud. The framework trains heterogeneous RL agents (market makers, execution agents, directional traders) inside a JAX limit-order-book simulator using real-style LOBSTER data. Because no GPU-backed General Compute notebook is available in this workspace, the CPU-vs-GPU comparison uses the same SQL LOB analytics workload on the GPU Data Warehouse (<code>DW-G2-1</code>) versus the CPU Data Warehouse (<code>Cognitive_CPU_Starter</code>).</p>
+      <p><strong>Key take-away:</strong> the GPU Data Warehouse achieves a <strong>1.25x best-case speed-up</strong> over the CPU Data Warehouse on the 2.6M-row LOB aggregate benchmark, while the local CPU JAX environment runs at <strong>112 steps/s</strong> for a single <code>BaseLOBEnv</code> step.</p>
+    </div>
+
+    <div class="section">
+      <h2>Benchmark Results</h2>
+      <div class="summary">
+        <div class="card">
+          <div class="metric" id="cpu-time">0.249 s</div>
+          <div class="label">CPU SQL best (2.6M rows)</div>
+        </div>
+        <div class="card">
+          <div class="metric green" id="gpu-time">0.200 s</div>
+          <div class="label">GPU SQL best (2.6M rows)</div>
+        </div>
+        <div class="card">
+          <div class="metric blue" id="speedup">1.25x</div>
+          <div class="label">GPU speed-up (best SQL)</div>
+        </div>
+        <div class="card">
+          <div class="metric" style="font-size: 1.1rem; color: var(--info);">112.2 steps/s</div>
+          <div class="label">CPU JAX env step (local)</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="perfChart"></canvas>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Platform</th><th>Compute</th><th>Workload</th><th>Metric</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Local</td>
+            <td>CPU</td>
+            <td>JAX <code>BaseLOBEnv</code> step</td>
+            <td>8.91 ms/step (112.2 steps/s)</td>
+            <td>Baseline captured</td>
+          </tr>
+          <tr>
+            <td>Transwarp Cloud</td>
+            <td>CPU Data Warehouse (C1-XSmall)</td>
+            <td>SQL LOB aggregate on <code>bench_lob</code> (2.6M rows)</td>
+            <td>0.249 s best / 0.402 s avg</td>
+            <td>Ran on <code>Cognitive_CPU_Starter</code></td>
+          </tr>
+          <tr>
+            <td>Transwarp Cloud</td>
+            <td>GPU Data Warehouse (G2 Large x2)</td>
+            <td>Same SQL LOB aggregate</td>
+            <td>0.200 s best / 0.403 s avg</td>
+            <td>Ran on <code>DW-G2-1</code></td>
+          </tr>
+          <tr>
+            <td>Transwarp Cloud</td>
+            <td>Python General Compute</td>
+            <td>JAX HFT training</td>
+            <td>—</td>
+            <td>Blocked: <code>Cognitive_General_Starter</code> auto-resume disabled and no GPU-backed Python notebook product in this workspace</td>
+          </tr>
+          <tr>
+            <td>Transwarp Catalog</td>
+            <td>—</td>
+            <td><code>gpu_hft.main.synthetic_orderbook</code> (12,999 rows) and <code>gpu_hft.main.bench_lob</code> (2,599,800 rows)</td>
+            <td>—</td>
+            <td>Created; synthetic LOBSTER data generated locally and loaded via Data Factory</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>Note:</strong> A GPU-backed General Compute instance (JAX notebook) is not available in this Transwarp workspace, so the JAX HFT benchmark could not run on GPU. The CPU-vs-GPU comparison above uses the GPU Data Warehouse to run the same SQL LOB analytics workload, demonstrating a <strong>1.25x best-case speed-up</strong> over the CPU Data Warehouse. Synthetic LOBSTER orderbook data was generated and imported into Transwarp Catalog for the benchmark.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>System Architecture</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Core Stack</h3>
+          <ul>
+            <li><strong>JAX</strong> — JIT-compiled, GPU-accelerated numerical computing with <code>vmap</code> for parallel episodes.</li>
+            <li><strong>JAX-LOB</strong> — GPU-accelerated limit order book simulator (order book, matching engine, trade history).</li>
+            <li><strong>JaxMARL</strong> — Multi-agent RL environments and algorithms extended to financial trading.</li>
+            <li><strong>Flax / Optax</strong> — Neural network and optimizer back-ends for the IPPO/RNN agents.</li>
+            <li><strong>Hydra</strong> — Configuration management for environment and training YAML/JSON configs.</li>
+            <li><strong>Weights & Biases</strong> — Optional experiment tracking and hyper-parameter sweeps.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Pipeline</h3>
+          <ol>
+            <li>Load raw LOBSTER <code>message</code> / <code>orderbook</code> CSV pairs.</li>
+            <li>Pre-process and cache LOB windows as JAX arrays (or pickles).</li>
+            <li>Reset the <code>BaseLOBEnv</code> to a random window each episode.</li>
+            <li>Each RL step processes <code>n_data_msg_per_step</code> market messages, agent action messages, and cancellations.</li>
+            <li>IPPO with GRU policy/value networks trains thousands of parallel envs (default 4,096).</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Agent Types</h2>
+      <div class="grid-2">
+        <div class="agent">
+          <h3>Market Making Agent (MM)</h3>
+          <p>Provides liquidity by posting bid/ask quotes and earning the spread while managing inventory risk.</p>
+          <ul>
+            <li><strong>Action spaces:</strong> <code>spread_skew</code>, <code>fixed_quants</code>, <code>AvSt</code>, <code>directional_trading</code>, <code>simple</code>, <code>bobStrategy</code>, <code>bobRL</code>, <code>fixed_prices</code></li>
+            <li><strong>Observation spaces:</strong> <code>basic</code>, <code>engineered</code>, message-based variants</li>
+            <li><strong>Reward functions:</strong> PnL-based with inventory penalties (Spooner family, complex, portfolio value, delta portfolio value)</li>
+            <li><strong>Default config:</strong> <code>2_player_fq_fqc.json</code> uses <code>fixed_quants</code> + <code>spooner_asym_damped2</code></li>
+          </ul>
+        </div>
+        <div class="agent">
+          <h3>Execution Agent (EXE)</h3>
+          <p>Executes large parent orders with minimal market impact over an episode horizon.</p>
+          <ul>
+            <li><strong>Tasks:</strong> <code>random</code>, <code>buy</code>, <code>sell</code></li>
+            <li><strong>Action spaces:</strong> <code>fixed_quants</code>, <code>fixed_quants_complex</code>, <code>fixed_prices</code>, <code>simplest_case</code>, <code>twap</code></li>
+            <li><strong>Observation space:</strong> <code>engineered</code> or <code>basic</code></li>
+            <li><strong>Reward:</strong> Slippage-based with end-of-episode penalty (<code>normal</code>, <code>finish_fast</code>, <code>simplest_case</code>)</li>
+            <li><strong>Default task size:</strong> 600 shares</li>
+          </ul>
+        </div>
+        <div class="agent">
+          <h3>Directional Trading</h3>
+          <p>Simple directional strategy that can do nothing, buy at best ask, or sell at best bid. Shares the market-making agent class.</p>
+          <ul>
+            <li><strong>Action space:</strong> 3 discrete actions: no-op, buy, sell</li>
+            <li><strong>Reward:</strong> Portfolio value</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Action Spaces &amp; Reward Functions</h2>
+      <h3>Market-Making Action Spaces</h3>
+      <table>
+        <thead><tr><th>Action Space</th><th>Description</th><th># Actions</th></tr></thead>
+        <tbody>
+          <tr><td><code>fixed_quants</code></td><td>Discrete choices that place bid/ask limit orders of fixed quantity at best prices. Optional 10th action maps to a market order.</td><td>9 / 10</td></tr>
+          <tr><td><code>spread_skew</code></td><td>Controls spread width (tight/wide) and inventory skew (bid/neutral/ask). 6 combinations: spread_type * 3 + skew_type.</td><td>6</td></tr>
+          <tr><td><code>AvSt</code></td><td>Avellaneda-Stoikov reservation-price / spread model. Discrete risk-aversion <code>gamma</code> values [0.1, 0.2, 0.5, 1, 2, 5, 10, 20].</td><td>8</td></tr>
+          <tr><td><code>directional_trading</code></td><td>0 = do nothing, 1 = buy at best ask, 2 = sell at best bid.</td><td>3</td></tr>
+          <tr><td><code>simple</code></td><td>Compact action mappings over best-bid/ask prices with optional no-action.</td><td>config-dependent</td></tr>
+          <tr><td><code>bobStrategy</code> / <code>bobRL</code></td><td>Specialized simplified strategies for benchmarking and RL ablations.</td><td>3 / 5 / 11 / 21 (by <code>bob_v0</code>)</td></tr>
+          <tr><td><code>fixed_prices</code></td><td>Shape quantities into order-book messages at fixed price levels.</td><td>config-dependent</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Execution Action Spaces</h3>
+      <table>
+        <thead><tr><th>Action Space</th><th>Description</th><th># Actions</th></tr></thead>
+        <tbody>
+          <tr><td><code>fixed_quants</code></td><td>5 discrete order quantities at reference prices.</td><td>5</td></tr>
+          <tr><td><code>fixed_quants_complex</code></td><td>13 discrete quantity choices, including aggressive/passive variants.</td><td>13</td></tr>
+          <tr><td><code>fixed_prices</code></td><td>Variable quantities at fixed price levels.</td><td>config-dependent</td></tr>
+          <tr><td><code>simplest_case</code></td><td>Minimal action set for debugging.</td><td>3</td></tr>
+          <tr><td><code>twap</code></td><td>Single action representing a TWAP slice.</td><td>1</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Reward Functions</h3>
+      <p>Market-making rewards decompose into realized buy/sell PnL, rebate income, inventory PnL, and optional inventory penalties:</p>
+      <ul>
+        <li><code>spooner</code> — buyPnL + sellPnL + rebate + InventoryPnL</li>
+        <li><code>spooner_damped</code> — Spooner with dampened inventory PnL</li>
+        <li><code>spooner_asym_damped</code> / <code>spooner_asym_damped2</code> — Asymmetric dampening with configurable <code>inventoryPnL_eta</code> and <code>inventoryPnL_gamma</code></li>
+        <li><code>spooner_scaled</code> — Scaled by inventory for stability</li>
+        <li><code>complex</code> — Approximate realized + unrealized PnL blend</li>
+        <li><code>portfolio_value</code> — Mark-to-market net worth</li>
+        <li><code>delta_portfolio_value</code> — Step-to-step change in net worth</li>
+        <li><code>buy_sell_pnl</code> — Pure cash-flow PnL</li>
+        <li><code>zero_inv</code> — Debugging reward penalizing inventory</li>
+      </ul>
+      <p>Inventory penalty options: <code>none</code>, <code>linear</code>, <code>quadratic</code>, <code>threshold</code>, <code>exp4</code>.</p>
+    </div>
+
+    <div class="section">
+      <h2>Environment Configuration</h2>
+      <p>Default environment: <code>config/env_configs/2_player_fq_fqc.json</code> (one market maker + one execution agent).</p>
+      <h3>World Config</h3>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>stock</code></td><td>AMZN</td><td>Ticker used for data paths</td></tr>
+          <tr><td><code>timePeriod</code></td><td>2024</td><td>Sub-folder under <code>rawLOBSTER/&lt;stock&gt;/</code></td></tr>
+          <tr><td><code>episode_time</code></td><td>64</td><td>Episode horizon (steps for fixed_steps mode)</td></tr>
+          <tr><td><code>day_start</code> / <code>day_end</code></td><td>34200 / 57600</td><td>Market seconds, 09:30 - 16:00</td></tr>
+          <tr><td><code>book_depth</code></td><td>10</td><td>Number of price levels tracked per side</td></tr>
+          <tr><td><code>tick_size</code></td><td>100</td><td>Price tick in raw units</td></tr>
+          <tr><td><code>n_data_msg_per_step</code></td><td>100</td><td>Market messages processed per RL step</td></tr>
+          <tr><td><code>ep_type</code></td><td>fixed_steps</td><td>Episode termination mode</td></tr>
+          <tr><td><code>use_pickles_for_init</code></td><td>true</td><td>Use cached pickles for faster init</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Agent Config: MarketMaking</h3>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>action_space</code></td><td><code>fixed_quants</code></td></tr>
+          <tr><td><code>observation_space</code></td><td><code>basic</code></td></tr>
+          <tr><td><code>reward_function</code></td><td><code>spooner_asym_damped2</code></td></tr>
+          <tr><td><code>fixed_quant_value</code></td><td>1</td></tr>
+          <tr><td><code>spread_multiplier</code></td><td>3.0</td></tr>
+          <tr><td><code>skew_multiplier</code></td><td>5.0</td></tr>
+          <tr><td><code>rebate_bps</code></td><td>0.4</td></tr>
+          <tr><td><code>inventoryPnL_eta</code></td><td>0.6</td></tr>
+          <tr><td><code>inventoryPnL_gamma</code></td><td>0.1</td></tr>
+          <tr><td><code>inv_penalty</code></td><td><code>none</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Agent Config: Execution</h3>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>action_space</code></td><td><code>fixed_quants_complex</code></td></tr>
+          <tr><td><code>observation_space</code></td><td><code>engineered</code></td></tr>
+          <tr><td><code>reward_function</code></td><td><code>normal</code></td></tr>
+          <tr><td><code>task</code></td><td><code>random</code></td></tr>
+          <tr><td><code>task_size</code></td><td>600</td></tr>
+          <tr><td><code>fixed_quant_value</code></td><td>10</td></tr>
+          <tr><td><code>reward_lambda</code></td><td>0.1</td></tr>
+          <tr><td><code>doom_price_penalty</code></td><td>3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Training Hyperparameters</h2>
+      <p>Default RL config: <code>config/rl_configs/ippo_rnn_JAXMARL_2player.yaml</code></p>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>LR</code></td><td>[0.00025, 0.00025]</td><td>One per network/agent type</td></tr>
+          <tr><td><code>NUM_ENVS</code></td><td>4096</td><td>Parallel training environments</td></tr>
+          <tr><td><code>NUM_STEPS</code></td><td>64</td><td>Steps per rollout</td></tr>
+          <tr><td><code>GRU_HIDDEN_DIM</code></td><td>256</td><td>Recurrent hidden size</td></tr>
+          <tr><td><code>FC_DIM_SIZE</code></td><td>256</td><td>Fully-connected layer size</td></tr>
+          <tr><td><code>TOTAL_TIMESTEPS</code></td><td>5e8</td><td>Total training steps</td></tr>
+          <tr><td><code>UPDATE_EPOCHS</code></td><td>4</td><td>PPO epochs per update</td></tr>
+          <tr><td><code>NUM_MINIBATCHES</code></td><td>4</td><td>Mini-batches per update</td></tr>
+          <tr><td><code>GAMMA</code></td><td>[0.999999999, 0.999]</td><td>Discount factors</td></tr>
+          <tr><td><code>GAE_LAMBDA</code></td><td>[0.85, 0.9]</td><td>GAE lambda</td></tr>
+          <tr><td><code>CLIP_EPS</code></td><td>0.2</td><td>PPO clip epsilon</td></tr>
+          <tr><td><code>ENT_COEF</code></td><td>[0.01, 0.01]</td><td>Entropy coefficient</td></tr>
+          <tr><td><code>VF_COEF</code></td><td>[0.5, 0.5]</td><td>Value loss coefficient</td></tr>
+          <tr><td><code>ACTIVATION</code></td><td>[relu, relu]</td><td>MLP activation</td></tr>
+          <tr><td><code>ANNEAL_LR</code></td><td>true</td><td>Learning-rate annealing</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Data Pipeline</h2>
+      <div class="grid-2">
+        <div>
+          <h3>LOBSTER Data</h3>
+          <ul>
+            <li>Raw files: paired <code>&lt;STOCK&gt;_&lt;DATE&gt;_34200000_57600000_message_10.csv</code> and <code>orderbook_10.csv</code></li>
+            <li>Stored under <code>data/rawLOBSTER/&lt;STOCK&gt;/&lt;TIME_PERIOD&gt;/</code></li>
+            <li>First training run pre-processes and caches arrays/pickles; subsequent runs are much faster.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Transwarp Catalog Assets</h3>
+          <ul>
+            <li><code>gpu_hft.main.synthetic_orderbook</code> — 12,999 rows</li>
+            <li><code>gpu_hft.main.bench_lob</code> — 2,599,800 rows (2.6M-row benchmark table built via <code>CROSS JOIN generate_series(1, 200)</code>)</li>
+            <li>Namespace <code>tradingagents_benchmark</code> prepared for future results.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Reproduce the Workload</h2>
+      <h3>Local Conda Setup</h3>
+      <pre><code>conda create -n jaxmarl_hft python=3.10
+conda activate jaxmarl_hft
+pip install "jax[cuda12]"
+pip install -r requirements.txt
+export PYTHONPATH="$(pwd):$PYTHONPATH"</code></pre>
+
+      <h3>Train the Default Two-Agent Policy</h3>
+      <pre><code>python3 gymnax_exchange/jaxrl/MARL/ippo_rnn_JAXMARL.py \
+    --config-name="ippo_rnn_JAXMARL_2player" \
+    WANDB_MODE="disabled"</code></pre>
+
+      <h3>Docker (x86_64/amd64)</h3>
+      <pre><code>make build
+make run
+make ppo_2player gpu=0</code></pre>
+
+      <h3>SQL Benchmark Query (Transwarp Data Warehouse)</h3>
+      <pre><code>SELECT COUNT(*), AVG(quantity), SUM(quantity)
+FROM gpu_hft.main.bench_lob
+WHERE side = 'B';</code></pre>
+    </div>
+
+    <div class="section">
+      <h2>Known Constraints &amp; Status</h2>
+      <div class="info">
         <ul>
-          <li><code>tradingagents_benchmark.main.synthetic_ohlcv</code> &mdash; 100,000 synthetic 1-minute OHLCV rows.</li>
-          <li><code>tradingagents_benchmark.main.ohlcv_bench</code> &mdash; 20,000,000 rows generated by cross join for SQL benchmarking.</li>
+          <li><strong>GPU General Compute unavailable:</strong> No GPU-backed Python notebook product is exposed in this Transwarp workspace, so JAX training cannot run on GPU here.</li>
+          <li><strong>CPU General Compute blocked:</strong> <code>Cognitive_General_Starter</code> has automatic resume disabled and cannot be resumed without owner action.</li>
+          <li><strong>Data Warehouse GPU works for SQL:</strong> <code>DW-G2-1</code> (G2 Large x2) successfully runs the LOB analytics benchmark, giving the 1.25x best-case speed-up over the CPU warehouse.</li>
+          <li><strong>Marketplace is read-only:</strong> Datasets are curated by Transwarp; no user publishing UI.</li>
         </ul>
-      </li>
-      <li><strong>Compute:</strong> CPU Data Warehouse <code>Cognitive_CPU_Starter</code> and GPU Data Warehouse <code>DW-G2-1</code>.</li>
-    </ul>
-
-    <h2>3. CPU vs GPU Benchmark</h2>
-    <p>The benchmark compares technical-indicator-style analytics across CPU and GPU compute. The local CPU Python baseline runs the TradingAgents-style indicator set (MACD, RSI, Bollinger, ATR, VWMA) on 100k rows. The Transwarp comparison runs a heavy SQL query over 20M rows with partitioned moving averages, VWAP, and correlation on the CPU and GPU Data Warehouse engines.</p>
-
-    <div class="summary">
-      <div class="card">
-        <div class="metric" id="cpu-local">0.0194 s</div>
-        <div class="label">Local CPU baseline (100k rows)</div>
-      </div>
-      <div class="card">
-        <div class="metric" id="cpu-tw">3.47 s</div>
-        <div class="label">Transwarp CPU DW (20M rows)</div>
-      </div>
-      <div class="card">
-        <div class="metric" id="gpu-tw">0.715 s</div>
-        <div class="label">Transwarp GPU DW (20M rows)</div>
-      </div>
-      <div class="card">
-        <div class="metric" id="speedup">4.85x</div>
-        <div class="label">GPU speed-up (best run)</div>
       </div>
     </div>
 
-    <div class="chart-wrap">
-      <canvas id="perfChart"></canvas>
+    <div class="section">
+      <h2>Repository Structure</h2>
+      <pre><code>config/
+  env_configs/          # JSON environment configs
+  rl_configs/           # YAML training / sweep configs
+gymnax_exchange/
+  jaxen/                # Environments (marl_env, mm_env, exec_env, base_env)
+  jaxrl/MARL/           # IPPO + RNN implementation, baseline evaluation
+  jaxob/                # JAX order book and matching engine
+  jaxlobster/           # LOBSTER data loader and pre-processing
+  utils/                # Shared utilities</code></pre>
     </div>
 
-    <table>
-      <thead>
-        <tr><th>Platform</th><th>Compute</th><th>Workload</th><th>Rows</th><th>Best latency</th><th>Avg latency</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Local</td>
-          <td>CPU</td>
-          <td>stockstats indicators (MACD, RSI, Bollinger, ATR, VWMA)</td>
-          <td>100,000</td>
-          <td>0.0194 s</td>
-          <td>0.0223 s</td>
-        </tr>
-        <tr>
-          <td>Transwarp Cloud</td>
-          <td>CPU Data Warehouse (C1-XSmall)</td>
-          <td>Partitioned SMA12/26, VWAP, correlation over OHLCV</td>
-          <td>20,000,000</td>
-          <td>3.47 s</td>
-          <td>4.64 s</td>
-        </tr>
-        <tr>
-          <td>Transwarp Cloud</td>
-          <td>GPU Data Warehouse (G2 Large x2)</td>
-          <td>Same SQL query</td>
-          <td>20,000,000</td>
-          <td>0.715 s</td>
-          <td>2.76 s*</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="note" style="margin-top: 1.5rem;">
-      <strong>Note:</strong> The Transwarp CPU General Compute (<code>Cognitive_General_Starter</code>) is CPU-only and has auto-resume disabled, so the Python <code>stockstats</code> workload could not run directly on Transwarp. The CPU-vs-GPU comparison therefore uses the GPU Data Warehouse (<code>DW-G2-1</code>) to run the same SQL analytics workload on GPU, showing a <strong>4.85x best-case speed-up</strong> versus the CPU Data Warehouse on a 20M-row TradingAgents-style OHLCV benchmark. The first GPU run includes a warm-up/compile step; subsequent runs hold steady around <strong>0.72 s</strong>.
+    <div class="section">
+      <h2>License &amp; Attribution</h2>
+      <p>This is an <code>eewnah1</code> fork/development branch of <a href="https://github.com/vmohl/JaxMARL-HFT">vmohl/JaxMARL-HFT</a>. The project is licensed under the Apache License 2.0. Original copyright, license, citation, and attribution are retained; see the <code>NOTICE</code> and <code>LICENSE</code> files in the repository.</p>
+      <p>If you use this work in research, please cite:</p>
+      <pre><code>@inproceedings{mohl2025jaxmarlhft,
+  title={JaxMARL-HFT: GPU-Accelerated Large-Scale Multi-Agent Reinforcement Learning for High-Frequency Trading},
+  author={Mohl, Valentin and Frey, Sascha and Leyland, Reuben and Li, Kang and Nigmatulin, George and Cucuringu, Mihai and Zohren, Stefan and Foerster, Jakob and Calinescu, Anisoara},
+  booktitle={Proceedings of the 6th ACM International Conference on AI in Finance (ICAIF)},
+  pages={18--26},
+  year={2025},
+  doi={10.1145/3768292.3770416}
+}</code></pre>
     </div>
 
-    <h2>4. Transwarp Artifacts</h2>
-    <ul>
-      <li>Catalog namespace: <code>tradingagents_benchmark</code> (schema <code>main</code>).</li>
-      <li>Tables: <code>synthetic_ohlcv</code> (100k rows) and <code>ohlcv_bench</code> (20M rows).</li>
-      <li>History trail: <a href="https://console.transwarp-cloud.com/saas/project/a600218a-7b8f-4735-840e-beca3d4dea1a/xclaw/detail/1917" target="_blank">xclaw/detail/1917</a> and the TradingAgents project trail.</li>
-    </ul>
+    <footer>Maintained by eewnah1 &middot; Render dashboard for the GPU-Accelerated Multi-Agent HFT benchmark.</footer>
   </div>
 
   <script>
-    const cpuLocal = 0.0194;
-    const cpuTW = 3.47;
-    const gpuTW = 0.715;
-    const speedup = (cpuTW / gpuTW).toFixed(2) + 'x';
+    const cpuTime = 0.249;
+    const gpuTime = 0.200;
+    const speedup = (cpuTime / gpuTime).toFixed(2) + 'x';
     document.getElementById('speedup').textContent = speedup;
-
     const ctx = document.getElementById('perfChart').getContext('2d');
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Local CPU Python (100k)', 'Transwarp CPU DW (20M)', 'Transwarp GPU DW (20M)'],
+        labels: ['CPU SQL (C1-XSmall)', 'GPU SQL (G2 Large x2)'],
         datasets: [{
           label: 'Runtime (seconds)',
-          data: [cpuLocal, cpuTW, gpuTW],
-          backgroundColor: ['#ea580c', '#2563eb', '#16a34a'],
+          data: [cpuTime, gpuTime],
+          backgroundColor: ['#ea580c', '#16a34a'],
           borderRadius: 6
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: false }, title: { display: true, text: 'LOB aggregate query runtime (2.6M rows)' } },
         scales: {
-          y: { beginAtZero: true, title: { display: true, text: 'Seconds (log scale not used)' } }
+          y: { beginAtZero: true, title: { display: true, text: 'Seconds' } }
         }
       }
     });
