@@ -3,44 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPU HFT CPU vs GPU Benchmark</title>
+  <title>TradingAgents Project: CPU vs GPU Benchmark</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 2rem; background: #f7f7f8; color: #111; }
-    .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     h1 { margin-top: 0; }
+    h2 { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; margin-top: 2rem; }
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
     .card { background: #f3f4f6; padding: 1rem; border-radius: 8px; }
-    .metric { font-size: 2rem; font-weight: 700; color: #ea580c; }
+    .metric { font-size: 1.8rem; font-weight: 700; color: #ea580c; }
     .label { color: #6b7280; font-size: 0.9rem; }
     .chart-wrap { position: relative; height: 320px; margin: 2rem 0; }
     .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 4px; color: #92400e; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
     th { color: #6b7280; font-weight: 500; }
+    .agent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .agent-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
+    .agent-card h3 { margin-top: 0; font-size: 1.05rem; color: #111827; }
+    .agent-card p { margin-bottom: 0; color: #4b5563; font-size: 0.95rem; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>GPU-Accelerated Multi-Agent HFT: CPU vs GPU Benchmark</h1>
-    <p>Comparison of the <code>eewnah1/GPU-Accelerated-Multi-Agent-Reinforcement-Learning-for-High-Frequency-Trading</code> workload on Transwarp Cloud.</p>
+    <h1>TradingAgents Project on Transwarp Cloud</h1>
+    <p>Full overview of the <a href="https://github.com/eewnah1/TradingAgents" target="_blank">TradingAgents</a> multi-agent LLM trading framework, followed by the CPU vs GPU benchmark run on Transwarp Cloud.</p>
+
+    <h2>1. What is TradingAgents?</h2>
+    <p>TradingAgents is a multi-agent trading framework that mirrors a real-world trading firm. Specialized LLM-powered agents collaboratively evaluate market conditions, debate trade ideas, and reach a final trading decision through a LangGraph workflow.</p>
+
+    <div class="agent-grid">
+      <div class="agent-card">
+        <h3>Fundamentals Analyst</h3>
+        <p>Evaluates company financials, intrinsic value, and potential red flags from fundamentals data.</p>
+      </div>
+      <div class="agent-card">
+        <h3>Sentiment Analyst</h3>
+        <p>Aggregates news, StockTwits, and Reddit chatter into a single sentiment read for short-term mood.</p>
+      </div>
+      <div class="agent-card">
+        <h3>News Analyst</h3>
+        <p>Monitors global news and macroeconomic indicators and interprets their impact on markets.</p>
+      </div>
+      <div class="agent-card">
+        <h3>Technical Analyst</h3>
+        <p>Uses indicators such as MACD, RSI, Bollinger Bands, ATR, and VWMA to detect price patterns and momentum.</p>
+      </div>
+      <div class="agent-card">
+        <h3>Researcher Team</h3>
+        <p>Bullish and bearish researchers debate the analysts' insights and balance potential gains against risks.</p>
+      </div>
+      <div class="agent-card">
+        <h3>Trader Agent</h3>
+        <p>Composes the research reports into an informed trading decision, including timing and magnitude.</p>
+      </div>
+      <div class="agent-card">
+        <h3>Risk Management</h3>
+        <p>Assesses portfolio risk using volatility, liquidity, and other risk factors to adjust strategies.</p>
+      </div>
+      <div class="agent-card">
+        <h3>Portfolio Manager</h3>
+        <p>Approves or rejects the trade proposal. If approved, the order is sent to a simulated exchange.</p>
+      </div>
+    </div>
+
+    <h2>2. Data & Compute Pipeline</h2>
+    <ul>
+      <li><strong>Data sources:</strong> Yahoo Finance (yfinance), Alpha Vantage, FRED, Polymarket, and other configured vendors.</li>
+      <li><strong>Indicators:</strong> Computed with <code>stockstats</code> (MACD, RSI, Bollinger, ATR, VWMA, MFI, SMA/EMA).</li>
+      <li><strong>Workflow engine:</strong> LangGraph with structured-output agents and optional checkpoint resume.</li>
+      <li><strong>Transwarp catalog:</strong> <code>tradingagents_benchmark</code> namespace, schema <code>main</code>.</li>
+      <li><strong>Tables:</strong>
+        <ul>
+          <li><code>tradingagents_benchmark.main.synthetic_ohlcv</code> &mdash; 100,000 synthetic 1-minute OHLCV rows.</li>
+          <li><code>tradingagents_benchmark.main.ohlcv_bench</code> &mdash; 20,000,000 rows generated by cross join for SQL benchmarking.</li>
+        </ul>
+      </li>
+      <li><strong>Compute:</strong> CPU Data Warehouse <code>Cognitive_CPU_Starter</code> and GPU Data Warehouse <code>DW-G2-1</code>.</li>
+    </ul>
+
+    <h2>3. CPU vs GPU Benchmark</h2>
+    <p>The benchmark compares technical-indicator-style analytics across CPU and GPU compute. The local CPU Python baseline runs the TradingAgents-style indicator set (MACD, RSI, Bollinger, ATR, VWMA) on 100k rows. The Transwarp comparison runs a heavy SQL query over 20M rows with partitioned moving averages, VWAP, and correlation on the CPU and GPU Data Warehouse engines.</p>
 
     <div class="summary">
       <div class="card">
-        <div class="metric" id="cpu-time">0.249 s</div>
-        <div class="label">CPU SQL best (2.6M rows)</div>
+        <div class="metric" id="cpu-local">0.0194 s</div>
+        <div class="label">Local CPU baseline (100k rows)</div>
       </div>
       <div class="card">
-        <div class="metric" id="gpu-time">0.200 s</div>
-        <div class="label">GPU SQL best (2.6M rows)</div>
+        <div class="metric" id="cpu-tw">3.47 s</div>
+        <div class="label">Transwarp CPU DW (20M rows)</div>
       </div>
       <div class="card">
-        <div class="metric" id="speedup">1.25x</div>
-        <div class="label">GPU speed-up (best SQL)</div>
+        <div class="metric" id="gpu-tw">0.715 s</div>
+        <div class="label">Transwarp GPU DW (20M rows)</div>
       </div>
       <div class="card">
-        <div class="metric" style="font-size: 1.1rem; color: #2563eb;">112 steps/s</div>
-        <div class="label">CPU JAX env step (local)</div>
+        <div class="metric" id="speedup">4.85x</div>
+        <div class="label">GPU speed-up (best run)</div>
       </div>
     </div>
 
@@ -50,66 +111,64 @@
 
     <table>
       <thead>
-        <tr><th>Platform</th><th>Compute</th><th>Workload</th><th>Metric</th><th>Status</th></tr>
+        <tr><th>Platform</th><th>Compute</th><th>Workload</th><th>Rows</th><th>Best latency</th><th>Avg latency</th></tr>
       </thead>
       <tbody>
         <tr>
           <td>Local</td>
           <td>CPU</td>
-          <td>JAX <code>BaseLOBEnv</code> step</td>
-          <td>8.91 ms/step (112.2 steps/s)</td>
-          <td>Baseline captured</td>
+          <td>stockstats indicators (MACD, RSI, Bollinger, ATR, VWMA)</td>
+          <td>100,000</td>
+          <td>0.0194 s</td>
+          <td>0.0223 s</td>
         </tr>
         <tr>
           <td>Transwarp Cloud</td>
           <td>CPU Data Warehouse (C1-XSmall)</td>
-          <td>SQL LOB aggregate on <code>bench_lob</code> (2.6M rows)</td>
-          <td>0.249 s best / 0.402 s avg</td>
-          <td>Ran on <code>Cognitive_CPU_Starter</code></td>
+          <td>Partitioned SMA12/26, VWAP, correlation over OHLCV</td>
+          <td>20,000,000</td>
+          <td>3.47 s</td>
+          <td>4.64 s</td>
         </tr>
         <tr>
           <td>Transwarp Cloud</td>
           <td>GPU Data Warehouse (G2 Large x2)</td>
-          <td>Same SQL LOB aggregate</td>
-          <td>0.200 s best / 0.403 s avg</td>
-          <td>Ran on <code>DW-G2-1</code></td>
-        </tr>
-        <tr>
-          <td>Transwarp Cloud</td>
-          <td>Python General Compute</td>
-          <td>JAX HFT training</td>
-          <td>—</td>
-          <td>Blocked: <code>Cognitive_General_Starter</code> auto-resume disabled and no GPU-backed Python notebook product in this workspace</td>
-        </tr>
-        <tr>
-          <td>Transwarp Catalog</td>
-          <td>—</td>
-          <td><code>gpu_hft.main.synthetic_orderbook</code> (12,999 rows) and <code>gpu_hft.main.bench_lob</code> (2,599,800 rows)</td>
-          <td>—</td>
-          <td>Created; synthetic LOBSTER data generated locally and loaded via Data Factory</td>
+          <td>Same SQL query</td>
+          <td>20,000,000</td>
+          <td>0.715 s</td>
+          <td>2.76 s*</td>
         </tr>
       </tbody>
     </table>
 
     <div class="note" style="margin-top: 1.5rem;">
-      <strong>Note:</strong> A GPU-backed General Compute instance (JAX notebook) is not available in this Transwarp workspace, so the JAX HFT benchmark could not run on GPU. The CPU-vs-GPU comparison above uses the GPU Data Warehouse (<code>DW-G2-1</code>) to run the same SQL LOB analytics workload on GPU, demonstrating a <strong>1.25x best-case speed-up</strong> over the CPU Data Warehouse (<code>Cognitive_CPU_Starter</code>). Synthetic LOBSTER orderbook data (12,999 rows) was generated for the GPU HFT repo and imported into Transwarp Catalog as <code>gpu_hft.main.synthetic_orderbook</code>. A larger 2.6M-row benchmark table <code>gpu_hft.main.bench_lob</code> was built from it for the SQL comparison.
+      <strong>Note:</strong> The Transwarp CPU General Compute (<code>Cognitive_General_Starter</code>) is CPU-only and has auto-resume disabled, so the Python <code>stockstats</code> workload could not run directly on Transwarp. The CPU-vs-GPU comparison therefore uses the GPU Data Warehouse (<code>DW-G2-1</code>) to run the same SQL analytics workload on GPU, showing a <strong>4.85x best-case speed-up</strong> versus the CPU Data Warehouse on a 20M-row TradingAgents-style OHLCV benchmark. The first GPU run includes a warm-up/compile step; subsequent runs hold steady around <strong>0.72 s</strong>.
     </div>
+
+    <h2>4. Transwarp Artifacts</h2>
+    <ul>
+      <li>Catalog namespace: <code>tradingagents_benchmark</code> (schema <code>main</code>).</li>
+      <li>Tables: <code>synthetic_ohlcv</code> (100k rows) and <code>ohlcv_bench</code> (20M rows).</li>
+      <li>History trail: <a href="https://console.transwarp-cloud.com/saas/project/a600218a-7b8f-4735-840e-beca3d4dea1a/xclaw/detail/1917" target="_blank">xclaw/detail/1917</a> and the TradingAgents project trail.</li>
+    </ul>
   </div>
 
   <script>
-    const cpuTime = 0.249;
-    const gpuTime = 0.200;
-    const speedup = (cpuTime / gpuTime).toFixed(2) + 'x';
+    const cpuLocal = 0.0194;
+    const cpuTW = 3.47;
+    const gpuTW = 0.715;
+    const speedup = (cpuTW / gpuTW).toFixed(2) + 'x';
     document.getElementById('speedup').textContent = speedup;
+
     const ctx = document.getElementById('perfChart').getContext('2d');
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['CPU SQL (C1-XSmall)', 'GPU SQL (G2 Large x2)'],
+        labels: ['Local CPU Python (100k)', 'Transwarp CPU DW (20M)', 'Transwarp GPU DW (20M)'],
         datasets: [{
           label: 'Runtime (seconds)',
-          data: [cpuTime, gpuTime],
-          backgroundColor: ['#ea580c', '#16a34a'],
+          data: [cpuLocal, cpuTW, gpuTW],
+          backgroundColor: ['#ea580c', '#2563eb', '#16a34a'],
           borderRadius: 6
         }]
       },
@@ -118,7 +177,7 @@
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, title: { display: true, text: 'Seconds' } }
+          y: { beginAtZero: true, title: { display: true, text: 'Seconds (log scale not used)' } }
         }
       }
     });
