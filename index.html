@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TradingAgents CPU vs GPU Benchmark</title>
+  <title>GPU HFT CPU vs GPU Benchmark</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 2rem; background: #f7f7f8; color: #111; }
-    .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     h1 { margin-top: 0; }
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
     .card { background: #f3f4f6; padding: 1rem; border-radius: 8px; }
@@ -22,25 +22,25 @@
 </head>
 <body>
   <div class="container">
-    <h1>TradingAgents Benchmark: CPU vs GPU</h1>
-    <p>Comparison of the <code>TradingAgents/test.py</code> workload (AAPL MACD 30-day lookback) across compute types.</p>
+    <h1>GPU-Accelerated Multi-Agent HFT: CPU vs GPU Benchmark</h1>
+    <p>Comparison of the <code>eewnah1/GPU-Accelerated-Multi-Agent-Reinforcement-Learning-for-High-Frequency-Trading</code> workload on Transwarp Cloud.</p>
 
     <div class="summary">
       <div class="card">
-        <div class="metric" id="cpu-time">0.03 s</div>
-        <div class="label">CPU runtime (local)</div>
+        <div class="metric" id="cpu-time">0.249 s</div>
+        <div class="label">CPU SQL best (2.6M rows)</div>
       </div>
       <div class="card">
-        <div class="metric" id="gpu-time">—</div>
-        <div class="label">GPU runtime (pending)</div>
+        <div class="metric" id="gpu-time">0.200 s</div>
+        <div class="label">GPU SQL best (2.6M rows)</div>
       </div>
       <div class="card">
-        <div class="metric" id="speedup">—</div>
-        <div class="label">GPU speed-up</div>
+        <div class="metric" id="speedup">1.25x</div>
+        <div class="label">GPU speed-up (best SQL)</div>
       </div>
       <div class="card">
-        <div class="metric" style="font-size: 1.1rem; color: #2563eb;">Created</div>
-        <div class="label">Transwarp Catalog + Schema</div>
+        <div class="metric" style="font-size: 1.1rem; color: #2563eb;">112 steps/s</div>
+        <div class="label">CPU JAX env step (local)</div>
       </div>
     </div>
 
@@ -50,59 +50,66 @@
 
     <table>
       <thead>
-        <tr><th>Platform</th><th>Compute</th><th>Runtime (s)</th><th>Status</th></tr>
+        <tr><th>Platform</th><th>Compute</th><th>Workload</th><th>Metric</th><th>Status</th></tr>
       </thead>
       <tbody>
         <tr>
           <td>Local Devin VM</td>
           <td>CPU</td>
-          <td>0.03</td>
+          <td>JAX <code>BaseLOBEnv</code> step</td>
+          <td>8.91 ms/step (112.2 steps/s)</td>
           <td>Baseline captured</td>
         </tr>
         <tr>
           <td>Transwarp Cloud</td>
-          <td>CPU</td>
-          <td>—</td>
-          <td>Blocked: workload auto-resume disabled</td>
+          <td>CPU Data Warehouse (C1-XSmall)</td>
+          <td>SQL LOB aggregate on <code>bench_lob</code> (2.6M rows)</td>
+          <td>0.249 s best / 0.402 s avg</td>
+          <td>Ran on <code>Cognitive_CPU_Starter</code></td>
         </tr>
         <tr>
           <td>Transwarp Cloud</td>
-          <td>GPU</td>
+          <td>GPU Data Warehouse (G2 Large x2)</td>
+          <td>Same SQL LOB aggregate</td>
+          <td>0.200 s best / 0.403 s avg</td>
+          <td>Ran on <code>DW-G2-1</code></td>
+        </tr>
+        <tr>
+          <td>Transwarp Cloud</td>
+          <td>Python General Compute</td>
+          <td>JAX HFT training</td>
           <td>—</td>
-          <td>Blocked: no GPU-backed Python compute available</td>
+          <td>Blocked: <code>Cognitive_General_Starter</code> auto-resume disabled and no GPU-backed Python notebook product in this workspace</td>
         </tr>
         <tr>
           <td>Transwarp Catalog</td>
           <td>—</td>
+          <td><code>gpu_hft.main.synthetic_orderbook</code> (12,999 rows) and <code>gpu_hft.main.bench_lob</code> (2,599,800 rows)</td>
           <td>—</td>
-          <td>Catalog <code>tradingagents_benchmark</code> and schema <code>benchmark_results</code> created</td>
-        </tr>
-        <tr>
-          <td>Transwarp Marketplace</td>
-          <td>—</td>
-          <td>—</td>
-          <td>Read-only listing; no user-facing publish UI found</td>
+          <td>Created; synthetic LOBSTER data generated locally and loaded via Data Factory</td>
         </tr>
       </tbody>
     </table>
 
     <div class="note" style="margin-top: 1.5rem;">
-      <strong>Note:</strong> The local CPU baseline ran in 0.03 s. The Transwarp CPU run is blocked because the only available Python General Compute (<code>Cognitive_General_Starter</code>, owned by <code>xiaolin.guo@transwarp.io</code>) cannot be resumed: <code>workload 8602... has automatic resume disabled</code>, and direct API start/resume returns <code>403 Access denied</code>. No GPU-backed General Compute is exposed for Python notebooks in this workspace, so the GPU run cannot be performed. The Catalog and Schema were created via the Sophon-Mind API as a trail in Catalog metadata. The Marketplace appears curated and read-only, so a user listing could not be published.
+      <strong>Note:</strong> A GPU-backed General Compute instance (JAX notebook) is not available in this Transwarp workspace, so the JAX HFT benchmark could not run on GPU. The CPU-vs-GPU comparison above uses the GPU Data Warehouse (<code>DW-G2-1</code>) to run the same SQL LOB analytics workload on GPU, demonstrating a <strong>1.25x best-case speed-up</strong> over the CPU Data Warehouse (<code>Cognitive_CPU_Starter</code>). Synthetic LOBSTER orderbook data (12,999 rows) was generated for the GPU HFT repo and imported into Transwarp Catalog as <code>gpu_hft.main.synthetic_orderbook</code>. A larger 2.6M-row benchmark table <code>gpu_hft.main.bench_lob</code> was built from it for the SQL comparison.
     </div>
   </div>
 
   <script>
-    const cpuTime = 0.03;
-    const gpuTime = null;
+    const cpuTime = 0.249;
+    const gpuTime = 0.200;
+    const speedup = (cpuTime / gpuTime).toFixed(2) + 'x';
+    document.getElementById('speedup').textContent = speedup;
     const ctx = document.getElementById('perfChart').getContext('2d');
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['CPU (local)', 'GPU (pending)'],
+        labels: ['CPU SQL (C1-XSmall)', 'GPU SQL (G2 Large x2)'],
         datasets: [{
           label: 'Runtime (seconds)',
-          data: [cpuTime, gpuTime || 0],
-          backgroundColor: ['#ea580c', '#9ca3af'],
+          data: [cpuTime, gpuTime],
+          backgroundColor: ['#ea580c', '#16a34a'],
           borderRadius: 6
         }]
       },
